@@ -20,6 +20,7 @@ class GoogleCloudPrint
     const AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/auth";
     const ACCESSTOKEN_URL = "https://accounts.google.com/o/oauth2/token";
     const REFRESHTOKEN_URL = "https://www.googleapis.com/oauth2/v3/token";
+
     /**
      * @var Authentication
      */
@@ -131,6 +132,14 @@ class GoogleCloudPrint
         return $ret;
     }
 
+    /**
+     * @param TokenResponse $tokenResponse
+     * @param Printer $printer
+     * @param string $fileContent
+     * @return mixed
+     * @throws CouldNotReadPrintersException
+     * @throws CouldNotSendPrintJobException
+     */
     public function printPdf(TokenResponse $tokenResponse, Printer $printer, $fileContent)
     {
         try {
@@ -157,5 +166,32 @@ class GoogleCloudPrint
         }
 
         return $response->success;
+    }
+
+    /**
+     * @param string $refreshToken
+     * @return TokenResponse
+     * @throws CouldNotAuthenticateException
+     */
+    public function refreshToken($refreshToken)
+    {
+        try {
+            $response = $this->httpClient->post(self::REFRESHTOKEN_URL, [
+                'form_params' => [
+                    'refresh_token' => $refreshToken,
+                    'client_id' => $this->authentication->getClientId(),
+                    'client_secret' => $this->authentication->getClientSecret(),
+                    'grant_type' => "refresh_token"
+                ]
+
+            ]);
+
+        } catch (ClientException $e) {
+            throw new CouldNotAuthenticateException("Could not authenticate: " . $e->getMessage());
+        }
+
+        $response = json_decode($response->getBody());
+
+        return new TokenResponse($response->access_token, $refreshToken, $response->token_type);
     }
 }
