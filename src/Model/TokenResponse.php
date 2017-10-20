@@ -19,7 +19,7 @@ class TokenResponse
     /**
      * @var string
      */
-    private $expiresIn;
+    private $refreshToken;
 
     /**
      * @var string
@@ -29,13 +29,13 @@ class TokenResponse
     /**
      * TokenResponse constructor.
      * @param string $accessToken
-     * @param string $expiresIn
+     * @param string $refreshToken
      * @param string $tokenType
      */
-    public function __construct($accessToken, $expiresIn, $tokenType)
+    public function __construct($accessToken, $refreshToken, $tokenType)
     {
         $this->accessToken = $accessToken;
-        $this->expiresIn = $expiresIn;
+        $this->refreshToken = $refreshToken;
         $this->tokenType = $tokenType;
     }
 
@@ -50,9 +50,9 @@ class TokenResponse
     /**
      * @return string
      */
-    public function getExpiresIn()
+    public function getRefreshToken()
     {
-        return $this->expiresIn;
+        return $this->refreshToken;
     }
 
     /**

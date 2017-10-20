@@ -98,7 +98,7 @@ class GoogleCloudPrint
 
         $response = json_decode($response->getBody());
 
-        return new TokenResponse($response->access_token, $response->expires_in, $response->token_type);
+        return new TokenResponse($response->access_token, $response->refresh_token, $response->token_type);
     }
 
     /**
