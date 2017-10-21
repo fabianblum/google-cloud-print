@@ -60,7 +60,7 @@ class GoogleCloudPrint
      *
      * @return string
      */
-    public function authenticate()
+    public function authenticate($force = false)
     {
         $params = array(
             'response_type' => 'code',
@@ -68,8 +68,11 @@ class GoogleCloudPrint
             'redirect_uri' => $this->redirectUrl,
             'scope' => 'https://www.googleapis.com/auth/cloudprint',
             'access_type' => 'offline'
-
         );
+
+        if ($force) {
+            $params['approval_prompt'] = 'force';
+        }
 
         return self::AUTHORIZATION_URL . "?" . http_build_query($params);
     }
@@ -103,16 +106,16 @@ class GoogleCloudPrint
     }
 
     /**
-     * @param TokenResponse $tokenResponse
+     * @param string $accessToken
      * @return Printer[]
      * @throws CouldNotReadPrintersException
      */
-    public function getPrinters(TokenResponse $tokenResponse)
+    public function getPrinters($accessToken)
     {
         try {
             $response = $this->httpClient->get("https://www.google.com/cloudprint/search", [
                 'headers' => [
-                    'Authorization' => $tokenResponse->getTokenType() . ' ' . $tokenResponse->getAccessToken()
+                    'Authorization' => 'Bearer ' . $accessToken
                 ]
             ]);
         } catch (ClientException $e) {
@@ -133,26 +136,26 @@ class GoogleCloudPrint
     }
 
     /**
-     * @param TokenResponse $tokenResponse
-     * @param Printer $printer
+     * @param string $accessToken
+     * @param string $printerId
      * @param string $fileContent
      * @return mixed
      * @throws CouldNotReadPrintersException
      * @throws CouldNotSendPrintJobException
      */
-    public function printPdf(TokenResponse $tokenResponse, Printer $printer, $fileContent)
+    public function printPdf($accessToken, $printerId, $fileContent)
     {
         try {
             $response = $this->httpClient->post("https://www.google.com/cloudprint/submit", [
                 'form_params' => [
-                    'printerid' => $printer->getId(),
+                    'printerid' => $printerId,
                     'title' => uniqid(),
                     'contentTransferEncoding' => 'base64',
                     'content' => base64_encode($fileContent), // encode file content as base64
                     'contentType' => "application/pdf"
                 ],
                 'headers' => [
-                    'Authorization' => $tokenResponse->getTokenType() . ' ' . $tokenResponse->getAccessToken()
+                    'Authorization' => 'Bearer ' . $accessToken
                 ]
             ]);
         } catch (ClientException $e) {
