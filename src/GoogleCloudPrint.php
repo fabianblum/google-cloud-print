@@ -165,7 +165,34 @@ class GoogleCloudPrint
         $response = json_decode($response->getBody());
 
         if ($response->success !== true) {
-            throw new CouldNotSendPrintJobException("Could not send print job: " . $response->errormessage);
+            throw new CouldNotSendPrintJobException("Could not send print job: " . $response->message);
+        }
+
+        return $response->success;
+    }
+
+    public function printUrl(TokenResponse $tokenResponse, Printer $printer, $url)
+    {
+        try {
+            $response = $this->httpClient->post("https://www.google.com/cloudprint/submit", [
+                'form_params' => [
+                    'printerid' => $printer->getId(),
+                    'title' => uniqid(),
+                    'content' => $url,
+                    'contentType' => 'url'
+                ],
+                'headers' => [
+                    'Authorization' => $tokenResponse->getTokenType() . ' ' . $tokenResponse->getAccessToken()
+                ]
+            ]);
+        } catch (ClientException $e) {
+            throw new CouldNotReadPrintersException("Could not read Printers: " . $e->getMessage());
+        }
+
+        $response = json_decode($response->getBody());
+
+        if ($response->success !== true) {
+            throw new CouldNotSendPrintJobException("Could not send print job: " . $response->message);
         }
 
         return $response->success;
